@@ -1,0 +1,338 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+/*
+ * TINDIGCHECK! 2.0: Server-side account management.
+ * This Edge Function must be deployed with Verify JWT enabled.
+ * SUPABASE_SERVICE_ROLE_KEY is a server-side secret; never copy it to Vite.
+ * The user_profiles.role column must be protected against client-side
+ * updates by RLS, otherwise a user could promote their own role.
+ */
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
+    "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
+
+type ManagedRole = "Admin" | "Viewer";
+type ActorRole = "Super Admin" | ManagedRole;
+type Profile = {
+    id: string;
+    full_name: string | null;
+    role: ActorRole;
+    grade: string | number | null;
+    section: string | null;
+};
+
+type AccountPayload = {
+    action?: unknown;
+    id?: unknown;
+    email?: unknown;
+    password?: unknown;
+    full_name?: unknown;
+    role?: unknown;
+    grade?: unknown;
+    section?: unknown;
+};
+
+function respond(body: Record<string, unknown>, status = 200): Response {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "X-Tindig-Accounts-Version": "phase15-superadmin-create-list"
+        }
+    });
+}
+
+function text(value: unknown): string {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+// Account creation: only an existing Super Admin may register another Super Admin.
+function canCreateRole(actor: ActorRole, target: unknown): target is ActorRole {
+    return actor === "Super Admin"
+        ? target === "Super Admin" || target === "Admin" || target === "Viewer"
+        : actor === "Admin" && target === "Viewer";
+}
+
+// Editing/deletion remains restricted to Admin/Viewer targets. In particular,
+// creating a Super Admin does NOT grant permission to edit/delete one.
+function allowedRole(actor: ActorRole, target: unknown): target is ManagedRole {
+    return actor === "Super Admin"
+        ? target === "Admin" || target === "Viewer"
+        : actor === "Admin" && target === "Viewer";
+}
+
+type AccountAuditAction = "INSERT" | "UPDATE" | "DELETE";
+
+Deno.serve(async (req: Request): Promise<Response> => {
+    if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+    if (req.method !== "POST") return respond({ error: "Method not allowed." }, 405);
+
+    try {
+        const authorization = req.headers.get("Authorization") ?? "";
+        if (!authorization.startsWith("Bearer ")) return respond({ error: "Sign in first." }, 401);
+        const jwt = authorization.slice(7);
+
+        const url = Deno.env.get("SUPABASE_URL");
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (!url || !anonKey || !serviceKey) {
+            return respond({ error: "Supabase server secrets are missing." }, 500);
+        }
+
+        const authClient = createClient(url, anonKey, {
+            auth: { autoRefreshToken: false, persistSession: false }
+        });
+        const { data: authData, error: authError } = await authClient.auth.getUser(jwt);
+        if (authError || !authData.user) return respond({ error: "Invalid session." }, 401);
+
+        const admin = createClient(url, serviceKey, {
+            auth: { autoRefreshToken: false, persistSession: false }
+        });
+
+        // The service-role client writes audit events; the browser never gets this privilege.
+        // Store only IDs, grade/section, and changed field NAMES (never passwords or emails).
+        const auditAccountAction = async (
+            actorId: string,
+            targetId: string,
+            action: AccountAuditAction,
+            grade: string | number | null,
+            section: string | null,
+            changedFields: string[] = []
+        ): Promise<string | null> => {
+            const { error } = await admin.from("tdc_activity_logs").insert({
+                actor_id: actorId,
+                action,
+                entity_type: "account",
+                record_id: null,
+                target_account_id: targetId,
+                learner_id: null,
+                grade: grade == null ? null : String(grade),
+                section,
+                changed_fields: changedFields
+            });
+            if (error) {
+                console.error("Account audit insert failed:", error.message);
+                return "Account change completed, but the activity log could not be written. Contact the system administrator.";
+            }
+            return null;
+        }
+
+        const { data: actor, error: actorError } = await admin
+            .from("user_profiles")
+            .select("id, full_name, role, grade, section")
+            .eq("id", authData.user.id)
+            .single();
+
+        if (actorError || !actor || !["Super Admin", "Admin"].includes(actor.role)) {
+            return respond({ error: "Account Management requires an Admin account." }, 403);
+        }
+        const current = actor as Profile;
+        let payload: AccountPayload;
+        try {
+            payload = await req.json();
+        } catch {
+            return respond({ error: "Invalid JSON request." }, 400);
+        }
+
+        if (payload.action === "list") {
+            const query = admin.from("user_profiles")
+                .select("id, full_name, role, grade, section")
+                .in("role", current.role === "Super Admin" ? ["Super Admin", "Admin", "Viewer"] : ["Viewer"])
+                .order("full_name", { ascending: true });
+
+            const { data: profiles, error: profileError } = await query;
+            if (profileError) return respond({ error: profileError.message }, 500);
+
+            const pending = new Set((profiles ?? []).map(item => String(item.id)));
+            const emails = new Map<string, string>();
+            // Emails live in auth.users, not necessarily in user_profiles.
+            // Supabase Admin API paginates; stop when all profile IDs are found.
+            for (let page = 1; page <= 10 && pending.size > 0; page++) {
+                const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+                if (error) return respond({ error: "Unable to load account emails." }, 500);
+                for (const authUser of data.users) {
+                    if (pending.has(authUser.id)) {
+                        emails.set(authUser.id, authUser.email ?? "");
+                        pending.delete(authUser.id);
+                    }
+                }
+                if (data.users.length < 1000) break;
+            }
+
+            return respond({ accounts: (profiles ?? []).map(item => ({
+                id: String(item.id),
+                email: emails.get(String(item.id)) ?? "",
+                full_name: String(item.full_name ?? ""),
+                role: item.role,
+                grade: item.grade == null ? null : String(item.grade),
+                section: item.section == null ? null : String(item.section)
+            })) });
+        }
+
+        if (payload.action === "delete") {
+            const targetId = text(payload.id);
+            if (!/^[0-9a-f-]{36}$/i.test(targetId) || targetId === current.id) {
+                return respond({ error: "Invalid account selection." }, 400);
+            }
+            const { data: target, error: targetError } = await admin.from("user_profiles")
+                .select("id, role, grade, section")
+                .eq("id", targetId)
+                .single();
+            if (targetError || !target || !allowedRole(current.role, target.role)) {
+                return respond({ error: "You cannot delete this account." }, 403);
+            }
+
+            // Fail closed: do not allow an unaudited deletion if migration is missing.
+            const { error: auditReadyError } = await admin.from("tdc_activity_logs")
+                .select("target_account_id").limit(1);
+            if (auditReadyError) {
+                return respond({ error: "Account activity logging is not ready. Run the account audit SQL migration first." }, 503);
+            }
+
+            // Supabase Auth is the authority for login removal; service role stays server-side.
+            const { error: deleteError } = await admin.auth.admin.deleteUser(targetId);
+            if (deleteError) {
+                return respond({ error: `Account was not deleted: ${deleteError.message}` }, 500);
+            }
+
+            // Some schemas cascade profile deletion, others need explicit cleanup.
+            let cleanupWarning: string | null = null;
+            const { data: remainingProfile, error: profileCheckError } = await admin
+                .from("user_profiles").select("id").eq("id", targetId).maybeSingle();
+            if (profileCheckError) {
+                cleanupWarning = "Login deleted; verify that the account profile was removed.";
+            } else if (remainingProfile) {
+                const { error: cleanupError } = await admin.from("user_profiles")
+                    .delete().eq("id", targetId);
+                if (cleanupError) {
+                    console.error("Account profile cleanup failed:", cleanupError.message);
+                    cleanupWarning = "Login deleted, but its account profile needs administrator cleanup.";
+                }
+            }
+
+            const auditWarning = await auditAccountAction(
+                current.id, targetId, "DELETE", target.grade, target.section
+            );
+            return respond({ message: "Account login deleted.",
+                ...(cleanupWarning || auditWarning ? { warning: [cleanupWarning, auditWarning].filter(Boolean).join(" ") } : {})
+            });
+        }
+
+        if (payload.action !== "create" && payload.action !== "update") {
+            return respond({ error: "Unsupported account action." }, 400);
+        }
+
+        // Different rules for CREATE vs UPDATE: a Super Admin can create a
+        // Super Admin, but cannot promote an existing account to Super Admin.
+        if (payload.action === "create") {
+            if (!canCreateRole(current.role, payload.role)) {
+                return respond({ error: "You cannot register this account role." }, 403);
+            }
+        } else if (!allowedRole(current.role, payload.role)) {
+            return respond({ error: "You cannot assign this account role when editing." }, 403);
+        }
+        const role = payload.role as ActorRole;
+        const fullName = text(payload.full_name);
+        if (fullName.length < 2 || fullName.length > 100) {
+            return respond({ error: "Full name must be 2–100 characters." }, 400);
+        }
+
+        let grade: string | null = null;
+        let section: string | null = null;
+        if (role === "Viewer") {
+            grade = text(payload.grade);
+            section = text(payload.section);
+            if (!["1", "2", "3", "4", "5", "6"].includes(grade) || !section) {
+                return respond({ error: "Viewer must have a valid Grade and Section." }, 400);
+            }
+            const { data: matchingSection, error: sectionError } = await admin
+                .from("sections")
+                .select("id")
+                .eq("grade", Number(grade))
+                .eq("section_name", section)
+                .maybeSingle();
+            if (sectionError || !matchingSection) {
+                return respond({ error: "The assigned Grade and Section do not exist." }, 400);
+            }
+        }
+
+        if (payload.action === "create") {
+            const email = text(payload.email).toLowerCase();
+            const password = typeof payload.password === "string" ? payload.password : "";
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+                return respond({ error: "Enter a valid email address." }, 400);
+            }
+            if (password.length < 12 || password.length > 128) {
+                return respond({ error: "Initial password must be 12–128 characters." }, 400);
+            }
+
+            const { data: created, error: createError } = await admin.auth.admin.createUser({
+                email,
+                password,
+                email_confirm: true,
+                user_metadata: { full_name: fullName }
+            });
+            if (createError || !created.user) {
+                return respond({ error: createError?.message ?? "Unable to create login." }, 400);
+            }
+
+            const { error: profileError } = await admin.from("user_profiles").upsert({
+                id: created.user.id,
+                email: created.user.email ?? email,
+                full_name: fullName,
+                role,
+                grade,
+                section
+            }, { onConflict: "id" });
+
+            if (profileError) {
+                // Prevent an orphaned login if the profile cannot be created.
+                const { error: cleanupError } = await admin.auth.admin.deleteUser(created.user.id);
+                if (cleanupError) console.error("Account rollback failed:", cleanupError.message);
+                return respond({ error: `Profile could not be saved: ${profileError.message}` }, 500);
+            }
+            const warning = await auditAccountAction(
+                current.id, created.user.id, "INSERT", grade, section,
+                ["full_name", "role", ...(role === "Viewer" ? ["grade", "section"] : [])]
+            );
+            return respond({ message: "Account created.", ...(warning ? { warning } : {}) }, 201);
+        }
+
+        // Update only Admin/Viewer accounts that the caller is allowed to manage.
+        const targetId = text(payload.id);
+        if (!/^[0-9a-f-]{36}$/i.test(targetId) || targetId === current.id) {
+            return respond({ error: "Invalid account selection." }, 400);
+        }
+        const { data: target, error: targetError } = await admin.from("user_profiles")
+            .select("id, role, full_name, grade, section")
+            .eq("id", targetId)
+            .single();
+        if (targetError || !target || !allowedRole(current.role, target.role)) {
+            return respond({ error: "You cannot edit this account." }, 403);
+        }
+        const { data: updated, error: updateError } = await admin.from("user_profiles")
+            .update({ full_name: fullName, role, grade, section })
+            .eq("id", targetId)
+            .select("id")
+            .single();
+        if (updateError || !updated) {
+            return respond({ error: updateError?.message ?? "Account update was not saved." }, 500);
+        }
+        const changedFields = [
+            ...(String(target.full_name ?? "") !== fullName ? ["full_name"] : []),
+            ...(target.role !== role ? ["role"] : []),
+            ...(String(target.grade ?? "") !== String(grade ?? "") ? ["grade"] : []),
+            ...(String(target.section ?? "") !== String(section ?? "") ? ["section"] : [])
+        ];
+        const warning = changedFields.length ? await auditAccountAction(
+            current.id, targetId, "UPDATE", grade, section, changedFields
+        ) : null;
+        return respond({ message: "Account updated.", ...(warning ? { warning } : {}) });
+    } catch (err) {
+        console.error("manage-accounts unexpected error:", err);
+        return respond({ error: "Unexpected account management error. Check function logs." }, 500);
+    }
+});
