@@ -1,5 +1,7 @@
-# 05-cloudinary-upload
+# Part 05 — Cloudinary: Profile Pictures & Medical Photos
 
-Browser-side Cloudinary integration, photo validation and upload requests. Secret-based uploads belong to the deployed Supabase Edge Function in supabase/functions/get-learner-photo.
+This group contains existing learner profile photo validation and Cloudinary-related integration (`learnerPhotos.ts`).
 
-Legacy imports from `src/lib` remain available through compatibility re-exports to avoid breaking existing pages.
+Medical photo upload to Cloudinary is a **requested responsibility**, not an implemented feature in the supplied code. Medical-file database metadata belongs to Part 04. Do not expose Cloudinary API secrets in browser variables.
+
+The current `uploadLearnerPhoto` client calls a Supabase Edge Function named `upload-learner-photo`; confirm that this function is deployed, as its source is not included in the supplied archive.
