@@ -1,0 +1,26 @@
+/* TINDIGCHECK! — four administrative page headers in deep green.
+   High specificity prevents older Vite dark-mode rules from whitening text.
+   Sidebar and buttons are deliberately unaffected. */
+
+#root .app-content .sections-page :is(h1, h2),
+#root .app-content .tdc-activity :is(h1, h2),
+#root .app-content .tdc-accounts :is(h1, h2),
+#root .app-content .tdc-diagnostics :is(h1, h2) {
+    color: #15543b !important;
+    -webkit-text-fill-color: #15543b !important;
+    opacity: 1 !important;
+}
+
+/* Main page titles use a consistent professional hierarchy. */
+#root .app-content :is(
+    .sections-page-header,
+    .tdc-activity-heading,
+    .tdc-accounts-heading,
+    .tdc-diag-heading
+) h1 {
+    color: #154b36 !important;
+    -webkit-text-fill-color: #154b36 !important;
+    font-weight: 800 !important;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}

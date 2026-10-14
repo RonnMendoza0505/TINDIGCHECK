@@ -1,0 +1,424 @@
+/*
+ * TINDIGCHECK! — Full viewport shell + polished Section Management.
+ * Import LAST in src/App.tsx, after App.css and tindig-professional.css.
+ * This patch keeps the entire page visible on the right side of the sidebar.
+ */
+
+/* The original Vite index.css fixes #root at 1126px. Override it completely. */
+html, body {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+}
+#root {
+    display: block !important;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    text-align: left !important;
+}
+.app-layout {
+    position: fixed !important;
+    inset: 0 !important;
+    display: grid !important;
+    grid-template-columns: clamp(200px, 17vw, 242px) minmax(0, 1fr) !important;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+}
+.app-layout > .sidebar {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+.app-layout > .app-content {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-gutter: auto !important;
+    overscroll-behavior: contain;
+}
+.app-layout > .app-content::-webkit-scrollbar { width: 9px; }
+.app-layout > .app-content::-webkit-scrollbar-track { background: #edf3ef; }
+.app-layout > .app-content::-webkit-scrollbar-thumb {
+    background: #a4bcae;
+    border-radius: 9px;
+}
+.app-layout > .app-content::-webkit-scrollbar-thumb:hover { background: #176a49; }
+
+/* Section Management uses all available width, without hiding records. */
+.sections-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+    max-width: none !important;
+    margin: 0;
+    padding: 0 0 18px;
+    color: #193b2d;
+}
+.sections-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.sections-kicker {
+    margin: 0 0 6px !important;
+    color: #25855d !important;
+    font-size: 10px !important;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+.sections-page h1 {
+    margin: 0 0 6px !important;
+    color: #143f2d !important;
+    font-size: clamp(24px, 2.4vw, 32px) !important;
+    line-height: 1.16;
+    font-weight: 800 !important;
+    letter-spacing: -.04em;
+}
+.sections-description {
+    margin: 0 !important;
+    color: #62766b !important;
+    font-size: 13px;
+}
+.sections-page button,
+.sections-page input,
+.sections-page select { font: inherit; }
+.sections-refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 9px 16px;
+    border: 1px solid #c9e1d3;
+    border-radius: 10px;
+    background: #fff;
+    color: #17583e;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+}
+.sections-refresh:hover:not(:disabled) { background: #edf7f0; }
+.sections-refresh span { font-size: 20px; line-height: 12px; }
+.sections-page button:disabled { opacity: .55; cursor: not-allowed; }
+
+.sections-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+.sections-summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 13px 17px;
+    border: 1px solid #e0eae4;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 3px 14px rgba(16, 62, 42, .035);
+}
+.sections-summary-card > span { color: #61776b; font-size: 12px; font-weight: 650; }
+.sections-summary-card > strong { color: #164d36; font-size: 27px; font-weight: 800; line-height: 1.1; }
+.sections-summary-card > strong em { font-style: normal; font-size: 13px; font-weight: 600; color: #82988b; }
+.sections-summary-card > small { color: #8b9d92; font-size: 10px; }
+
+.sections-alert {
+    margin: 0 !important;
+    padding: 10px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.sections-alert--error { background: #fff1f1; border: 1px solid #f0c6c6; color: #9b3030; }
+.sections-alert--success { background: #ebf8ef; border: 1px solid #c8e7d2; color: #1b6640; }
+
+.sections-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(275px, 315px);
+    align-items: start;
+    gap: 16px;
+    min-width: 0;
+}
+.sections-workspace--readonly { grid-template-columns: minmax(0, 1fr); }
+.sections-directory,
+.sections-page .section-editor {
+    min-width: 0;
+    padding: 17px;
+    border: 1px solid #e0eae4;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(16, 62, 42, .045);
+}
+.sections-card-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.sections-card-heading h2,
+.sections-page .section-editor h2 {
+    margin: 0 0 4px !important;
+    color: #173e2e !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    line-height: 1.2;
+}
+.sections-card-heading p { color: #829389; font-size: 11px; }
+.sections-count {
+    white-space: nowrap;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eaf6ee;
+    color: #246548;
+    font-size: 11px;
+    font-weight: 750;
+}
+.sections-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(135px, 170px);
+    gap: 11px;
+    margin-bottom: 13px;
+}
+.sections-search-field,
+.sections-grade-field,
+.sections-editor-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    min-width: 0;
+    color: #4e6859;
+    font-size: 11px;
+    font-weight: 750;
+}
+.sections-page :is(input[type="search"], input[type="text"], select) {
+    width: 100%;
+    min-width: 0;
+    height: 39px;
+    padding: 8px 11px;
+    border: 1px solid #d5e3da;
+    border-radius: 9px;
+    background: #fff;
+    color: #213e30;
+    font-size: 12px;
+    outline: none;
+}
+.sections-page input::placeholder { color: #a0ada5; }
+.sections-page :is(input, select):focus {
+    border-color: #26865d;
+    box-shadow: 0 0 0 3px rgba(38, 134, 93, .12);
+}
+.sections-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e5ede7;
+    border-radius: 11px;
+}
+.sections-table {
+    width: 100%;
+    min-width: 360px;
+    border-collapse: collapse;
+    text-align: left;
+    table-layout: auto;
+}
+.sections-table th {
+    padding: 11px 14px;
+    border-bottom: 1px solid #e5ede7;
+    background: #f2f8f4;
+    color: #32624a;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .055em;
+}
+.sections-table td {
+    height: 44px;
+    padding: 8px 14px;
+    border-bottom: 1px solid #edf2ee;
+    background: #fff;
+    color: #344b3d;
+    font-size: 12px;
+    vertical-align: middle;
+}
+.sections-table tr:last-child td { border-bottom: 0; }
+.sections-table tbody tr:hover td { background: #fafdfb; }
+.sections-table th:last-child,
+.sections-table td:last-child { text-align: right; }
+.sections-grade-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: #edf7f0;
+    color: #236247;
+    font-weight: 750;
+    white-space: nowrap;
+}
+.sections-name { color: #253e30; font-size: 13px; font-weight: 700; }
+.sections-row-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 7px; }
+.sections-row-actions button {
+    min-height: 29px;
+    padding: 5px 11px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+}
+.sections-edit { border: 1px solid #c8e3d3; background: #edf7f0; color: #236a49; }
+.sections-edit:hover:not(:disabled) { background: #dff1e5; }
+.sections-delete { border: 1px solid #f1d4d4; background: #fff5f4; color: #b14e4a; }
+.sections-delete:hover:not(:disabled) { background: #fce8e7; }
+.sections-empty { padding: 40px 14px !important; text-align: center !important; color: #83988a !important; }
+.sections-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.sections-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-top: 13px;
+    color: #708679;
+    font-size: 11px;
+}
+.sections-pagination-controls { display: inline-flex; align-items: center; gap: 8px; }
+.sections-pagination-controls button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #dce9df;
+    border-radius: 8px;
+    background: #fff;
+    color: #27684b;
+    font-size: 19px;
+    cursor: pointer;
+}
+.sections-pagination-controls button:hover:not(:disabled) { background: #edf7f0; }
+.sections-pagination-controls span { white-space: nowrap; font-weight: 650; }
+
+.sections-page .section-editor { padding: 20px; }
+.sections-editor-icon {
+    display: grid;
+    place-items: center;
+    width: 37px;
+    height: 37px;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    background: #e8f5ec;
+    color: #23734e;
+    font-size: 24px;
+    font-weight: 500;
+}
+.sections-editor-description { margin: 0 0 19px !important; color: #819488; font-size: 12px; }
+.sections-editor-field { margin-bottom: 15px; }
+.sections-save {
+    width: 100%;
+    min-height: 41px;
+    margin-top: 3px;
+    padding: 10px 12px;
+    border: 1px solid #176a49;
+    border-radius: 9px;
+    background: #176a49;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.sections-save:hover:not(:disabled) { background: #115237; }
+.sections-cancel {
+    width: 100%;
+    min-height: 37px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    border: 1px solid #d5e3da;
+    border-radius: 9px;
+    background: #fff;
+    color: #4b6656;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.sections-cancel:hover:not(:disabled) { background: #f3f8f5; }
+.sections-editor-note {
+    margin: 17px 0 0 !important;
+    padding-top: 13px;
+    border-top: 1px solid #e7eee9;
+    color: #8ba096;
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+@media (max-width: 1100px) {
+    .sections-workspace { grid-template-columns: minmax(0, 1fr) 260px; gap: 12px; }
+    .sections-directory, .sections-page .section-editor { padding: 13px; }
+}
+@media (max-width: 960px) {
+    .sections-workspace { grid-template-columns: minmax(0, 1fr); }
+    .sections-page .section-editor { order: -1; }
+    .sections-summary { gap: 8px; }
+    .sections-summary-card { padding: 12px; }
+    .sections-page { gap: 12px; }
+}
+@media (max-width: 900px) {
+    .app-layout { display: flex !important; flex-direction: column !important; }
+    .app-layout > .app-content { flex: 1 1 auto !important; height: auto !important; }
+}
+@media (max-width: 520px) {
+    .sections-page-header { align-items: flex-start; }
+    .sections-refresh { width: 100%; }
+    .sections-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sections-summary-card:last-child { grid-column: 1 / -1; }
+    .sections-filters { grid-template-columns: 1fr; }
+    .sections-pagination { flex-direction: column; align-items: flex-start; }
+}
+@media (max-height: 750px) and (min-width: 961px) {
+    .sections-page { gap: 10px; }
+    .sections-summary-card { padding: 9px 14px; }
+    .sections-summary-card > strong { font-size: 22px; }
+    .sections-directory { padding: 12px; }
+    .sections-table td { height: 38px; padding-top: 5px; padding-bottom: 5px; }
+    .sections-table th { padding-top: 9px; padding-bottom: 9px; }
+}
+@media print {
+    html, body, #root { width: auto !important; height: auto !important; overflow: visible !important; }
+    .app-layout {
+        position: static !important;
+        inset: auto !important;
+        display: block !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    .app-layout > .app-content { width: auto !important; height: auto !important; overflow: visible !important; }
+    .sections-page .section-editor, .sections-refresh, .sections-pagination { display: none !important; }
+}

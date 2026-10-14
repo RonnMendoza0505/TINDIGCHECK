@@ -1,0 +1,48 @@
+.tdc-plot-page { width: 100%; max-width: 1300px; color: #173b2b; }
+.tdc-plot-page * { box-sizing: border-box; }
+.tdc-plot-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 22px; }
+.tdc-plot-header h1 { font-size: 28px; color: #173f30; margin: 8px 0; }
+.tdc-plot-header p:last-child { color: #62786a; margin: 0; }
+.tdc-plot-button { border: 1px solid #b8d3c4; border-radius: 8px; padding: 10px 15px; background: #fff; color: #145e41; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.tdc-plot-button:disabled { opacity: .5; cursor: not-allowed; }
+.tdc-plot-panel { background: #fff; border: 1px solid #dce7e0; border-radius: 14px; padding: 24px; margin-bottom: 20px; box-shadow: 0 3px 12px rgba(20,65,42,.035); }
+.tdc-plot-panel h2 { font-size: 18px; color: #173f30; margin: 0 0 18px; }
+.tdc-plot-filters { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+.tdc-plot-filters label { display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 650; color: #344d40; }
+.tdc-plot-filters input, .tdc-plot-filters select { width: 100%; min-height: 43px; border: 1px solid #c8d8cf; border-radius: 8px; padding: 10px 12px; font: inherit; font-weight: 400; background: #fff; color: #1b392a; }
+.tdc-plot-filters input:focus, .tdc-plot-filters select:focus { outline: 2px solid #86c7a4; outline-offset: 1px; }
+.tdc-plot-learner-note, .tdc-plot-assignment { padding: 12px 14px; border-radius: 9px; background: #e9f7ee; color: #145a39; font-size: 14px; }
+.tdc-plot-learner-note { margin: 18px 0 0; }
+.tdc-plot-assignment { margin: 0 0 18px; }
+.tdc-plot-error { color: #9c1b2a; background: #fff0f0; border-radius: 8px; padding: 13px; font-size: 13px; }
+.tdc-plot-empty { color: #61776b; text-align: center; padding: 42px 18px; font-size: 14px; }
+.tdc-plot-cards { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 12px; margin-bottom: 20px; }
+.tdc-plot-card { min-width: 0; display: flex; flex-direction: column; text-align: left; gap: 10px; padding: 17px; border: 1px solid #dce7e0; border-top: 4px solid #16784b; border-radius: 12px; background: #fff; cursor: pointer; color: #173b2b; }
+.tdc-plot-card-active { background: #f0f8f3; outline: 2px solid #90bfa3; }
+.tdc-plot-card span { color: #61786a; font-size: 13px; font-weight: 700; }
+.tdc-plot-card strong { font-size: 20px; line-height: 1.2; overflow-wrap: anywhere; }
+.tdc-plot-card small { color: #6d8376; font-size: 11px; }
+.tdc-plot-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.tdc-plot-panel-heading h2 { margin: 0; }
+.tdc-plot-panel-heading p { color: #61786a; margin: 7px 0 0; font-size: 13px; }
+.tdc-plot-bmi-status { font-size: 13px; color: #536b5d; background: #f2f8f4; border-radius: 8px; padding: 10px 13px; }
+.tdc-plot-bmi-status strong { color: #1b583b; }
+.tdc-plot-chart-wrap { overflow-x: auto; }
+.tdc-plot-chart { width: 100%; min-width: 550px; display: block; }
+.tdc-plot-chart-help, .tdc-plot-disclaimer { font-size: 12px; color: #657a6c; line-height: 1.6; }
+.tdc-plot-chart-help { margin: 0; }
+.tdc-plot-notice { color: #865c19; background: #fff8e9; border-radius: 8px; padding: 11px; font-size: 13px; }
+.tdc-plot-count { font-size: 13px; color: #61786a; }
+.tdc-plot-table-scroll { overflow-x: auto; }
+.tdc-plot-table { width: 100%; min-width: 800px; border-collapse: collapse; font-size: 13px; }
+.tdc-plot-table th, .tdc-plot-table td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #e5eee8; white-space: nowrap; }
+.tdc-plot-table th { color: #345d48; background: #f2f8f4; }
+.tdc-plot-disclaimer { border-top: 1px solid #e1eae4; padding-top: 14px; }
+@media (max-width: 1080px) { .tdc-plot-cards { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 740px) { .tdc-plot-panel { padding: 16px; } .tdc-plot-filters { grid-template-columns: 1fr; } .tdc-plot-cards { grid-template-columns: repeat(2,minmax(0,1fr)); } .tdc-plot-panel-heading, .tdc-plot-header { flex-direction: column; align-items: stretch; } }
+
+/* Phase 10: report launcher inside Health Plot. */
+.tdc-report-launch { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.tdc-report-launch h2 { margin: 0 0 5px; }
+.tdc-report-launch p { color: #61786a; font-size: 13px; margin: 0; }
+@media (max-width: 700px) { .tdc-report-launch { flex-direction: column; align-items: stretch; } }

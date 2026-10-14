@@ -1,0 +1,444 @@
+/*
+ * TINDIGCHECK! — Professional responsive application shell.
+ * Load AFTER App.css so the original Vite starter CSS cannot constrain the app.
+ * The document itself never scrolls; long content remains accessible within
+ * the active panel until individual tables are converted to pagination.
+ */
+:root {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    color-scheme: light;
+    color: #183127;
+    background: #f3f7f5;
+    --tdc-ink: #183127;
+    --tdc-muted: #64776c;
+    --tdc-green: #176a49;
+    --tdc-green-dark: #104c35;
+    --tdc-border: #dfeae4;
+    --tdc-surface: #ffffff;
+    --tdc-background: #f3f7f5;
+    --tdc-shadow: 0 4px 22px rgba(16, 62, 42, .055);
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { width: 100%; height: 100%; min-height: 0; margin: 0; }
+html, body { overflow: hidden; }
+#root {
+    max-width: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    margin: 0 !important;
+    text-align: left !important;
+    background: var(--tdc-background);
+}
+body { color: var(--tdc-ink); background: var(--tdc-background); }
+button, input, select, textarea { font: inherit; }
+button { transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease; }
+button:focus-visible, a:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+    outline: 3px solid #6ac5a0;
+    outline-offset: 2px;
+}
+button:disabled { cursor: not-allowed; }
+
+/* Fixed viewport: no document-level scrollbars. */
+.app-layout {
+    display: grid !important;
+    grid-template-columns: clamp(206px, 17.5vw, 242px) minmax(0, 1fr);
+    width: 100%;
+    height: 100dvh;
+    min-height: 0 !important;
+    max-height: 100dvh;
+    overflow: hidden;
+    background: var(--tdc-background);
+}
+.app-content {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: clamp(12px, 1.65vw, 24px) !important;
+    overflow-x: hidden;
+    overflow-y: auto; /* Accessible fallback for large forms; body stays fixed. */
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+.app-content > section,
+.app-content > div,
+.app-content > article { max-width: 100%; }
+
+/* Sidebar and navigation. */
+.sidebar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 100%;
+    min-height: 0 !important;
+    padding: 17px 11px 14px !important;
+    background: linear-gradient(160deg, #164f3b 0%, #0d382d 100%);
+    border-right: 1px solid rgba(255,255,255,.08);
+    color: #fff;
+    overflow: visible;
+    z-index: 20;
+}
+.sidebar-brand { gap: 11px; padding: 5px 8px 20px; min-height: 67px; }
+.brand-symbol {
+    width: 39px;
+    height: 39px;
+    flex: 0 0 39px;
+    border: 1px solid rgba(255,255,255,.24);
+    background: rgba(255,255,255,.11);
+    border-radius: 12px;
+    font-size: 24px;
+    font-weight: 600;
+}
+.sidebar-brand h2 { font-size: 16px !important; letter-spacing: -.03em; color: #fff !important; }
+.sidebar-brand p { font-size: 10px; color: #cce1d7; opacity: 1; }
+.sidebar-navigation { display: flex; flex-direction: column; gap: 3px; min-height: 0; }
+.nav-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: clamp(33px, 4.5vh, 42px);
+    padding: 8px 11px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #d9e8df;
+    font-size: 12px;
+    font-weight: 540;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+}
+.nav-link:hover { background: rgba(255,255,255,.095); color: #fff; }
+.nav-link.active {
+    background: #e7f4eb;
+    border-color: #e7f4eb;
+    color: #124d35;
+    font-weight: 760;
+}
+.nav-symbol { width: 21px; flex: 0 0 21px; font-size: 16px; }
+.sidebar-footer {
+    margin-top: auto;
+    padding: 13px 7px 0;
+    border-top: 1px solid rgba(255,255,255,.17);
+}
+.account-summary { gap: 3px; margin-bottom: 10px; }
+.account-summary strong { color: #fff; font-size: 12px; }
+.account-summary span, .account-summary small { color: #d4e7db; font-size: 11px; }
+.logout-button {
+    min-height: 36px;
+    padding: 7px 12px;
+    border: 1px solid rgba(255,255,255,.27);
+    border-radius: 9px;
+    background: rgba(255,255,255,.10);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 650;
+}
+.logout-button:hover { background: rgba(255,255,255,.2); }
+.tdc-sidebar-more { position: relative; }
+.tdc-sidebar-more-menu {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 12px);
+    width: min(242px, 60vw);
+    max-height: min(74dvh, 540px);
+    overflow-y: auto;
+    padding: 9px;
+    border: 1px solid var(--tdc-border);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 18px 44px rgba(8,38,25,.2);
+    z-index: 60;
+}
+.tdc-sidebar-more-menu .nav-link { color: #244738; min-height: 39px; }
+.tdc-sidebar-more-menu .nav-link:hover { background: #eff7f2; }
+.tdc-sidebar-more-menu .nav-link.active { background: #d9efe2; color: #135339; }
+.tdc-sidebar-mobile-toggle, .tdc-sidebar-backdrop { display: none; }
+
+/* Consistent page surfaces, headings and controls. */
+.app-content h1 { font-size: clamp(21px, 2vw, 28px) !important; line-height: 1.18; letter-spacing: -.035em; font-weight: 760; }
+.app-content h2 { font-size: clamp(15px, 1.35vw, 19px); line-height: 1.3; font-weight: 720; }
+.app-content p { line-height: 1.48; }
+.app-content :is(.module-card, .tdc-stat-card, .tdc-dashboard-panel, .tdc-diag-card,
+  .tdc-diag-panel, .health-monitoring-panel, .tdc-meals-panel,
+  .learner-table-wrapper, .learner-modal-panel, .role-card) {
+    border-color: var(--tdc-border);
+    box-shadow: var(--tdc-shadow);
+}
+.app-content :is(.health-monitoring-panel, .tdc-dashboard-panel, .tdc-diag-card,
+  .tdc-meals-panel, .module-card) { border-radius: 13px; }
+.app-content :is(input:not([type="checkbox"]), select, textarea) {
+    max-width: 100%;
+    border-radius: 9px;
+}
+.app-content :is(.primary-button, .tdc-refresh-button, .tdc-diag-button) {
+    border-radius: 9px;
+}
+.dashboard-heading { margin-bottom: 16px; }
+.dashboard-heading h1 { margin: 4px 0; }
+.dashboard-grid { gap: clamp(8px, 1.2vw, 14px); grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+.module-card { min-height: 114px; padding: 15px; gap: 7px; }
+.module-icon { font-size: 22px; }
+.module-card strong { font-size: 14px; }
+.module-card small { font-size: 11px; line-height: 1.35; }
+
+/* Compact dashboard and monitoring to fit ordinary laptop viewports. */
+.tdc-dashboard { max-width: none; }
+.tdc-dashboard-stats { gap: 10px; margin-bottom: 12px; }
+.tdc-stat-card { padding: 12px 14px; gap: 5px; }
+.tdc-stat-card > strong { font-size: clamp(21px, 2.3vw, 27px); }
+.tdc-dashboard-panels { gap: 12px; margin-bottom: 12px; }
+.tdc-dashboard-panel { padding: 15px; }
+.tdc-grade-bars { gap: 9px; margin-top: 10px; }
+.tdc-profile-stat { padding: 9px 0; }
+.tdc-shortcut-heading { margin: 12px 0 10px; }
+.tdc-dashboard-table th, .tdc-dashboard-table td { padding: 7px 8px; }
+.health-monitoring-page { max-width: none; }
+.health-monitoring-heading { margin-bottom: 12px; }
+.health-monitoring-panel { padding: clamp(12px, 1.3vw, 18px); margin-bottom: 12px; }
+.health-monitoring-panel h2 { margin-bottom: 10px; }
+.health-monitoring-grid { gap: 10px; }
+.health-monitoring-field { gap: 5px; }
+.health-monitoring-field input, .health-monitoring-field select { min-height: 36px; padding: 7px 10px; }
+.health-monitoring-actions { margin-top: 12px; }
+.health-monitoring-actions button { padding: 9px 14px; }
+.health-monitoring-results > div { padding: 10px; }
+.health-monitoring-table th, .health-monitoring-table td { padding: 8px 9px; }
+.tdc-diagnostics { padding: 0 !important; max-width: none; }
+.tdc-diag-cards { gap: 10px; }
+.tdc-diag-card { padding: 13px; }
+.tdc-diag-panel-heading { padding: 13px 15px; }
+.tdc-diag-findings { padding: 12px; }
+.tdc-diag-finding { padding: 12px; }
+
+/* Avoid wide content pushing the document beyond the monitor. */
+:is(.learner-table-wrapper, .health-monitoring-table-scroll, .tdc-dashboard-table-scroll,
+ .tdc-meals-table-wrap) { max-width: 100%; }
+.app-content table { max-width: 100%; }
+.app-content th { white-space: nowrap; }
+
+/* Compact BMI diagnostics. */
+.tdc-bmi-notice {
+    padding: 11px 13px;
+    margin: 10px 0;
+    border: 1px solid #e8c78a;
+    border-radius: 10px;
+    background: #fff8e9;
+    color: #76501c;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.tdc-bmi-notice code { font-size: 12px; color: inherit; background: #f5e8c7; }
+.tdc-bmi-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 9px 0; }
+.tdc-bmi-reassess {
+    border: 1px solid #a4cdb8;
+    border-radius: 9px;
+    background: #edf8f1;
+    color: #185a3d;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+.tdc-bmi-reassess:hover:not(:disabled) { background: #dff2e6; }
+.tdc-bmi-reassess:disabled { opacity: .55; }
+.tdc-bmi-message { font-size: 12px; color: #226b49; }
+
+@media (max-height: 760px) and (min-width: 901px) {
+    .sidebar { padding-top: 10px !important; padding-bottom: 9px !important; }
+    .sidebar-brand { min-height: 58px; padding-bottom: 12px; }
+    .nav-link { min-height: 31px; padding: 6px 10px; }
+    .sidebar-footer { padding-top: 8px; }
+    .app-content { padding: 12px !important; }
+    .tdc-dashboard-panel { padding: 11px; }
+}
+@media (max-width: 1050px) {
+    .tdc-dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tdc-dashboard-panels { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+    .app-layout { display: flex !important; flex-direction: column; }
+    .sidebar {
+        flex: 0 0 62px;
+        width: 100% !important;
+        height: 62px;
+        min-height: 62px !important;
+        padding: 7px 12px !important;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 80;
+    }
+    .sidebar-brand { padding: 0; min-height: 0; }
+    .sidebar-brand h2 { font-size: 15px !important; }
+    .sidebar-brand p { font-size: 9px; }
+    .brand-symbol { width: 35px; height: 35px; flex-basis: 35px; }
+    .tdc-sidebar-mobile-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 40px;
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 9px;
+        background: rgba(255,255,255,.1);
+        color: #fff;
+        font-size: 21px;
+        cursor: pointer;
+    }
+    .sidebar-navigation {
+        display: none;
+        position: fixed;
+        top: 62px;
+        bottom: 0;
+        left: 0;
+        width: min(315px, 86vw);
+        padding: 16px 12px 130px;
+        background: #103e30;
+        overflow-y: auto;
+        z-index: 90;
+    }
+    .sidebar--open .sidebar-navigation { display: flex; }
+    .sidebar-footer {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: min(315px, 86vw);
+        padding: 12px 18px 18px;
+        background: #103e30;
+        z-index: 91;
+    }
+    .sidebar--open .sidebar-footer { display: block; }
+    .tdc-sidebar-more-menu {
+        position: static;
+        width: 100%;
+        max-height: none;
+        margin-top: 6px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.15);
+        box-shadow: none;
+        overflow: visible;
+    }
+    .tdc-sidebar-more-menu .nav-link { color: #e4f3eb; }
+    .tdc-sidebar-more-menu .nav-link.active { color: #124d35; }
+    .tdc-sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 62px 0 0;
+        width: 100%;
+        border: 0;
+        background: rgba(12, 33, 24, .43);
+        z-index: 75;
+        cursor: pointer;
+    }
+    .app-content {
+        flex: 1 1 auto;
+        height: auto;
+        padding: 14px !important;
+    }
+}
+@media (max-width: 600px) {
+    .app-content { padding: 10px !important; }
+    .dashboard-heading { flex-direction: column; gap: 8px; }
+    .tdc-dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tdc-stat-card { padding: 10px; }
+    .tdc-stat-card > span { font-size: 11px; }
+    .tdc-dashboard-panels { grid-template-columns: 1fr; }
+    .tdc-diag-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .health-monitoring-grid { grid-template-columns: 1fr; }
+    .health-monitoring-wide { grid-column: auto; }
+    .learner-modal-panel { width: calc(100vw - 18px); max-height: calc(100dvh - 20px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* Login stays centered and usable on shorter monitors. */
+.login-page {
+    min-height: 100dvh;
+    height: 100dvh;
+    max-width: 100%;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    overflow-y: auto;
+    background: radial-gradient(circle at 75% 10%, #e0f1e7, transparent 42%), #f3f7f5;
+}
+.login-form { max-width: min(430px, 100%); width: 100%; box-shadow: 0 14px 44px rgba(12, 56, 37, .1); }
+.login-form h1 { font-size: clamp(25px, 3vw, 36px) !important; letter-spacing: -.035em; }
+@media print {
+    html, body, #root, .app-layout, .app-content { height: auto !important; max-height: none !important; overflow: visible !important; }
+    .sidebar { display: none !important; }
+    .app-layout { display: block !important; }
+    .app-content { padding: 0 !important; }
+}
+
+/* RESPONSIVE MAIN SCROLLBAR */
+
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+.app-layout {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.app-content {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+
+    margin: 0 !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    scrollbar-gutter: auto !important;
+    overscroll-behavior-y: contain;
+}
+
+/* Adjust automatically on smaller screens */
+
+@media (max-width: 900px) {
+    .app-content {
+        flex: 1 1 auto;
+        height: auto;
+        min-height: 0;
+    }
+}
+
+/* Keep scrollbar neat and visible */
+
+.app-content::-webkit-scrollbar {
+    width: 9px;
+}
+
+.app-content::-webkit-scrollbar-track {
+    background: #edf3ef;
+}
+
+.app-content::-webkit-scrollbar-thumb {
+    background: #a5bdb0;
+    border-radius: 10px;
+}
+
+.app-content::-webkit-scrollbar-thumb:hover {
+    background: #176a49;
+}
