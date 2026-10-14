@@ -1,4 +1,4 @@
-# TINDIGCHECK! — Frontend / Backend Separation (Updated Five Parts)
+# TINDIGCHECK!
 
 ## Structure
 - `frontend/`: Vite + React + TypeScript app; runnable frontend source.
