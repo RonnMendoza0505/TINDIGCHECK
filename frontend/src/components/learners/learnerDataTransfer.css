@@ -1,0 +1,27 @@
+.tdt-panel { margin: 20px 0 24px; padding: 20px; border: 1px solid #d8e3eb; border-radius: 14px; background: #f8fbfd; }
+.tdt-heading h2 { margin: 0 0 6px; font-size: 1.2rem; color: #204b69; }
+.tdt-heading p { margin: 0 0 16px; font-size: .9rem; color: #526476; }
+.tdt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.tdt-card { padding: 16px; background: #fff; border: 1px solid #e2eaf0; border-radius: 10px; }
+.tdt-card h3, .tdt-preview h3 { margin: 0 0 12px; color: #204b69; font-size: 1rem; }
+.tdt-fields { display: flex; gap: 10px; flex-wrap: wrap; }
+.tdt-fields label { flex: 1 1 140px; }
+.tdt-fields label, .tdt-file { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: .88rem; }
+.tdt-fields select, .tdt-file input { box-sizing: border-box; width: 100%; padding: 9px; border: 1px solid #bdccd6; border-radius: 7px; background: #fff; }
+.tdt-file { margin: 12px 0; }
+.tdt-check { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0; font-size: .88rem; }
+.tdt-check input { margin-top: 2px; flex: 0 0 auto; }
+.tdt-panel button { padding: 9px 13px; background: #204b69; color: white; border: 0; border-radius: 7px; cursor: pointer; font-weight: 600; }
+.tdt-panel button:disabled { cursor: not-allowed; opacity: .55; }
+.tdt-panel button.tdt-secondary { background: #e8f1f6; color: #204b69; }
+.tdt-note { color: #566779; font-size: .83rem; line-height: 1.5; }
+.tdt-preview { margin-top: 16px; padding: 15px; background: #fff; border: 1px solid #e2eaf0; border-radius: 10px; }
+.tdt-table-scroll { overflow-x: auto; }
+.tdt-preview table { border-collapse: collapse; width: 100%; font-size: .86rem; }
+.tdt-preview th, .tdt-preview td { padding: 9px; border-bottom: 1px solid #e1e9ef; text-align: left; }
+.tdt-preview th { background: #edf3f7; }
+.tdt-errors { padding: 12px; background: #fff1f0; border: 1px solid #efc5c0; border-radius: 8px; color: #9d302b; }
+.tdt-errors ul { margin-bottom: 0; padding-left: 18px; }
+.tdt-success { color: #216c3e; font-weight: 600; }
+.tdt-error { color: #a92e28; font-weight: 600; }
+@media (max-width: 780px) { .tdt-grid { grid-template-columns: 1fr; } .tdt-panel { padding: 13px; } }

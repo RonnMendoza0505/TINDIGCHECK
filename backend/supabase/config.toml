@@ -1,0 +1,12 @@
+# Supabase Edge Functions. Deploy using the Supabase CLI or dashboard.
+[functions.manage-accounts]
+verify_jwt = true
+
+[functions.manage-learner-medical]
+verify_jwt = true
+
+[functions.upload-learner-photo]
+verify_jwt = true
+
+[functions.get-learner-photo]
+verify_jwt = true
